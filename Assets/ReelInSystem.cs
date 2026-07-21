@@ -19,11 +19,16 @@ public class ReelInSystem : MonoBehaviour
     [Header("Zwijanie")]
     [SerializeField] private Key reelKey = Key.R;
     [SerializeField] private float baseReelSpeed = 5f;
+    [Tooltip("Prędkość zwijania podczas holu ryby (gdy ryba na haczyku).")]
+    [SerializeField] private float reelSpeedWithFish = 3f;
 
     [Header("Krzywa szybkości zwijania")]
     [Tooltip("X = waga ryby (0 do maxFishWeight), Y = mnożnik prędkości (0-1).")]
     [SerializeField] private AnimationCurve speedMultiplierCurve = AnimationCurve.Linear(0f, 1f, 40f, 0.1f);
     [SerializeField] private float maxFishWeight = 40f;
+
+    // FishAI na tym samym obiekcie (lub znaleziony automatycznie)
+    private FishAI fishAI;
 
     [Header("Logowanie")]
     [SerializeField] private float distanceLogInterval = 0.5f;
@@ -48,6 +53,12 @@ public class ReelInSystem : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        // Automatycznie znajdź FishAI na tym samym obiekcie lub w scenie
+        if (fishAI == null)
+            fishAI = GetComponent<FishAI>();
+        if (fishAI == null)
+            fishAI = FindObjectOfType<FishAI>();
     }
 
     void Start()
@@ -100,6 +111,10 @@ public class ReelInSystem : MonoBehaviour
             Vector3 throwDirection = transform.right;
             transform.position = startPosition + throwDirection * 10f;
         }
+
+        // Informujemy FishAI o zacięciu ryby
+        if (fishAI != null)
+            fishAI.OnFishHooked(fishWeight);
     }
 
     public bool IsReeling => isReeling;
@@ -113,7 +128,7 @@ public class ReelInSystem : MonoBehaviour
 
         float t = Mathf.Clamp01(fishWeight / maxFishWeight);
         float multiplier = Mathf.Clamp01(speedMultiplierCurve.Evaluate(t * maxFishWeight));
-        return Mathf.Lerp(0f, baseReelSpeed, multiplier);
+        return Mathf.Lerp(0f, reelSpeedWithFish, multiplier);
     }
 
     private void StartReeling()
@@ -152,6 +167,10 @@ public class ReelInSystem : MonoBehaviour
     private void ReelIn()
     {
         float currentSpeed = GetCurrentReelSpeed();
+
+        // Jeśli jest ryba, najpierw symulujemy jej ruchy (boki, ucieczki)
+        if (hasFish && fishAI != null)
+            fishAI.UpdateFishMovement();
 
         transform.position = Vector3.MoveTowards(
             transform.position,
