@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class colision : MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] float moveSpeed = 5f;
 
@@ -22,4 +22,3 @@ public class colision : MonoBehaviour
         transform.Translate(movement.normalized * moveSpeed * Time.deltaTime);
     }
 }
-

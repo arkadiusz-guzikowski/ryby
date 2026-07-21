@@ -3,22 +3,53 @@ using UnityEngine.InputSystem;
 
 public class FishingSystem : MonoBehaviour
 {
-    enum FishingState { Idle, Waiting, Biting }
+    public static FishingSystem Instance;
+
+    public enum FishingState { Idle, Waiting, Biting }
     private FishingState state = FishingState.Idle;
     private float timer = 0f;
     private float waitTime = 0f;
+
+    public FishingState CurrentState => state;
+
+    [Header("Czas oczekiwania na branie")]
+    [SerializeField] private float minWaitTime = 2f;
+    [SerializeField] private float maxWaitTime = 5f;
+
+    [Header("Awaryjna waga ryby (gdy FishSizes nie istnieje)")]
+    [SerializeField] private float fallbackMinWeight = 1f;
+    [SerializeField] private float fallbackMaxWeight = 40f;
+
+    [Header("Klawisz akcji")]
+    [SerializeField] private Key actionKey = Key.Space;
+
+    // Eventy - inne skrypty mogą się na nie subskrybować
+    public delegate void FishCaughtHandler(float weight);
+    public event FishCaughtHandler OnFishCaught;
+
+    public delegate void FishingStartedHandler();
+    public event FishingStartedHandler OnFishingStarted;
+
+    public delegate void BitingHandler();
+    public event BitingHandler OnBiting;
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Update()
     {
         switch (state)
         {
             case FishingState.Idle:
-                if (Keyboard.current.spaceKey.wasPressedThisFrame)
+                if (Keyboard.current[actionKey].wasPressedThisFrame)
                 {
                     Debug.Log("Zaczynasz łowić! Czekaj na branie...");
                     state = FishingState.Waiting;
                     timer = 0f;
-                    waitTime = Random.Range(2f, 5f);
+                    waitTime = Random.Range(minWaitTime, maxWaitTime);
+                    OnFishingStarted?.Invoke();
                 }
                 break;
 
@@ -28,23 +59,22 @@ public class FishingSystem : MonoBehaviour
                 {
                     Debug.Log("BRANIE! Naciśnij SPACJĘ!");
                     state = FishingState.Biting;
+                    OnBiting?.Invoke();
                 }
                 break;
 
             case FishingState.Biting:
-                if (Keyboard.current.spaceKey.wasPressedThisFrame)
+                if (Keyboard.current[actionKey].wasPressedThisFrame)
                 {
                     float fishWeight = 0f;
 
                     if (FishSizes.Instance != null)
                         fishWeight = FishSizes.Instance.GetRandomCarpWeight();
                     else
-                        fishWeight = Random.Range(1f, 40f);
+                        fishWeight = Random.Range(fallbackMinWeight, fallbackMaxWeight);
 
-                        if (FishWeightDisplay.Instance != null)
-                            FishWeightDisplay.Instance.OnFishCaught(fishWeight);
-                    else
-                        Debug.Log($"Złowiłeś karpia! Waga: {fishWeight}kg");
+                    // Wywołujemy event - ktoś inny może zareagować (np. FishWeightDisplay)
+                    OnFishCaught?.Invoke(fishWeight);
 
                     state = FishingState.Idle;
                 }
@@ -52,4 +82,3 @@ public class FishingSystem : MonoBehaviour
         }
     }
 }
-
