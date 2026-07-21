@@ -38,8 +38,14 @@ public class FishWeightDisplay : MonoBehaviour
             FishingSystem.Instance.OnFishCaught -= OnFishCaught;
     }
 
+
+
     private void OnFishCaught(float weight)
     {
+        // Jeśli ryba jest z gorącego miejsca (30-40kg), dodaj specjalny komunikat
+        if (weight >= 30f)
+            Debug.Log($"<color=#FF4500>🔥 GORĄCE MIEJSCE! Gigantyczny karp: {weight}kg!</color>");
+
         Debug.Log($"<color={caughtColorHex}>{caughtMessage}</color> Waga: <b>{weight}kg</b>");
 
         if (weight >= recordWeight)
@@ -51,4 +57,5 @@ public class FishWeightDisplay : MonoBehaviour
         else
             Debug.Log(smallFishMessage);
     }
+
 }

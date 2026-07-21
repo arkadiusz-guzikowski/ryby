@@ -37,9 +37,9 @@ public class FishSizes : MonoBehaviour
         if (IsInHotSpot)
         {
             float weight = Random.Range(30f, 40f);
-            Debug.Log($"<color=#FF4500>🔥 GORĄCE MIEJSCE! Gigantyczny karp: {weight}kg!</color>");
             return weight;
         }
+
 
         float total = chance1_5kg + chance5_10kg + chance10_20kg + chance20_30kg + chance30_40kg;
         if (total <= 0f) return 1f;

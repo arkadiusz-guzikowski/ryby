@@ -334,6 +334,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db6c0a2ab5c61ee4e99912c92e2f4791, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishingHotSpot
+  playerTag: Player
+  enterMessage: "\U0001F525 Jeste\u015B w gor\u0105cym miejscu! Szansa na gigantycznego
+    karpia 30-40kg!"
+  exitMessage: "Opuszczasz gor\u0105ce miejsce. Szanse wracaj\u0105 do normy."
+  enterColorHex: '#00FF00'
+  exitColorHex: '#FFFFFF'
 --- !u!58 &458424810
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -439,8 +445,8 @@ Transform:
   m_GameObject: {fileID: 458424808}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.65, y: -1.38, z: 0}
-  m_LocalScale: {x: 2.3589, y: 2.3898, z: 1}
+  m_LocalPosition: {x: -3.93, y: -2.46, z: 0}
+  m_LocalScale: {x: 4.7180243, y: 4.8172174, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -455,12 +461,13 @@ GameObject:
   m_Component:
   - component: {fileID: 511984648}
   - component: {fileID: 511984647}
-  - component: {fileID: 511984646}
   - component: {fileID: 511984649}
   - component: {fileID: 511984650}
   - component: {fileID: 511984651}
   - component: {fileID: 511984652}
   - component: {fileID: 511984653}
+  - component: {fileID: 511984654}
+  - component: {fileID: 511984655}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -468,19 +475,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &511984646
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 511984645}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae1041c8e1acb264891227939bbcb79d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::fishing
-  moveSpeed: 5
 --- !u!212 &511984647
 SpriteRenderer:
   serializedVersion: 3
@@ -550,7 +544,7 @@ Transform:
   m_GameObject: {fileID: 511984645}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.51, y: -1.6, z: 0}
+  m_LocalPosition: {x: 0.09, y: -8.07, z: 0}
   m_LocalScale: {x: 0.3634, y: 0.3634, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -595,6 +589,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94976f4c1d540f24d8b5e5adef1cfe52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishingSystem
+  minWaitTime: 2
+  maxWaitTime: 5
+  fallbackMinWeight: 1
+  fallbackMaxWeight: 40
+  actionKey: 1
 --- !u!114 &511984651
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -607,6 +606,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50b2e649950f9a3459068ed38dd871ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishWeightDisplay
+  recordWeight: 30
+  bigFishWeight: 20
+  mediumFishWeight: 10
+  caughtMessage: "Z\u0142owi\u0142e\u015B karpia!"
+  recordMessage: "\U0001F3C6 REKORD! Gigantyczny karp!"
+  bigFishMessage: "Du\u017Ca ryba!"
+  mediumFishMessage: "Niez\u0142y karpik."
+  smallFishMessage: "Ma\u0142y karpik."
+  caughtColorHex: '#FFD700'
+  recordColorHex: red
+  bigFishColorHex: orange
 --- !u!114 &511984652
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -660,6 +670,59 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.49999997
+--- !u!114 &511984654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 511984645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f31aac7f06077f64fb08044ef76a01da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
+  moveSpeed: 5
+--- !u!114 &511984655
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 511984645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abea95a3d7f4af14d8695f003e2122f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ReelInSystem
+  reelKey: 32
+  baseReelSpeed: 5
+  speedMultiplierCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: -0.0225
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 40
+      value: 0.1
+      inSlope: -0.0225
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxFishWeight: 40
+  distanceLogInterval: 0.5
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -672,6 +735,7 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -766,7 +830,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 10.2
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -791,12 +855,44 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: -0.3, y: -3.5, z: -25.554438}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72ece51f2901e7445ab60da3685d6b5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineBrain
+  ShowDebugText: 0
+  ShowCameraFrustum: 1
+  IgnoreTimeScale: 0
+  WorldUpOverride: {fileID: 0}
+  ChannelMask: -1
+  UpdateMethod: 2
+  BlendUpdateMethod: 1
+  LensModeOverride:
+    Enabled: 0
+    DefaultMode: 2
+  DefaultBlend:
+    Style: 1
+    Time: 2
+    CustomCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  CustomBlends: {fileID: 0}
 --- !u!1 &541883102
 GameObject:
   m_ObjectHideFlags: 0
@@ -933,6 +1029,81 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &965395139
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 965395141}
+  - component: {fileID: 965395140}
+  m_Layer: 0
+  m_Name: CinemachineCamera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &965395140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 965395139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
+  Priority:
+    Enabled: 0
+    m_Value: 0
+  OutputChannel: 1
+  StandbyUpdate: 2
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  Target:
+    TrackingTarget: {fileID: 0}
+    LookAtTarget: {fileID: 0}
+    CustomLookAtTarget: 0
+  Lens:
+    FieldOfView: 34
+    OrthographicSize: 10.2
+    NearClipPlane: 0.3
+    FarClipPlane: 1000
+    Dutch: 0
+    ModeOverride: 0
+    PhysicalProperties:
+      GateFit: 2
+      SensorSize: {x: 21.946, y: 16.002}
+      LensShift: {x: 0, y: 0}
+      FocusDistance: 10
+      Iso: 200
+      ShutterSpeed: 0.005
+      Aperture: 16
+      BladeCount: 5
+      Curvature: {x: 2, y: 11}
+      BarrelClipping: 0.25
+      Anamorphism: 0
+  BlendHint: 0
+--- !u!4 &965395141
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 965395139}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.3, y: -3.5, z: -25.554438}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1256,6 +1427,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 519420032}
+  - {fileID: 965395141}
   - {fileID: 619394802}
   - {fileID: 541883103}
   - {fileID: 511984648}
