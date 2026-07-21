@@ -3,13 +3,17 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Główny system łowienia.
-/// Odpowiada za: rozpoczynanie łowienia (SPACJA), oczekiwanie na branie, zacięcie ryby.
-/// Komunikuje się z ReelInSystem przez metody publiczne.
+/// 
+/// Flow:
+/// 1. Gracz rzuca spławik (LPM/Q) → spławik w wodzie → automatycznie zaczyna łowić
+/// 2. Po 2-5s → "BRANIE!" → gracz naciska SPACJĘ → ryba na haczyku
+/// 3. Gracz przytrzymuje R → zwijanie spławika do siebie
+/// 4. Ryba dopływa → złowiona! Spławik znika.
 /// 
 /// Klawisze:
-/// - SPACJA: rozpocznij łowienie / zaciśnij rybę / anuluj (gdy ryba na haczyku)
+/// - SPACJA: zaciśnij rybę (gdy branie)
 /// - R: zwijanie zestawu (obsługiwane przez ReelInSystem)
-/// - Q: rzut / mierzenie odległości (obsługiwane przez PlayerMovement)
+/// - LPM/Q: rzut spławikiem (obsługiwane przez PlayerMovement)
 /// </summary>
 public class FishingSystem : MonoBehaviour
 {
@@ -89,29 +93,20 @@ public class FishingSystem : MonoBehaviour
             return;
         }
 
-        // Rozpocznij łowienie
-        if (Keyboard.current[actionKey].wasPressedThisFrame)
+        // Sprawdź czy spławik jest w wodzie
+        bool bobberInWater = Bobber.Instance != null && Bobber.Instance.IsInWater;
+
+        // Rozpocznij łowienie (automatycznie lub przez SPACJĘ)
+        if (bobberInWater && state == FishingState.Idle && !hasHookedFish)
         {
-            Debug.Log("<color=#00FF00>🎣 Zaczynasz łowić! Czekaj na branie...</color>");
-            state = FishingState.Waiting;
-            timer = 0f;
-            waitTime = Random.Range(minWaitTime, maxWaitTime);
-
-            // Jeśli jesteśmy w hotspocie, skracamy czas oczekiwania
-            if (FishSizes.Instance != null && FishSizes.Instance.IsInHotSpot)
-            {
-                waitTime *= FishSizes.Instance.HotSpotWaitTimeMultiplier;
-                Debug.Log($"<color=#00FF00>🔥 HotSpot: czas oczekiwania x{FishSizes.Instance.HotSpotWaitTimeMultiplier}</color>");
-            }
-
-            OnFishingStarted?.Invoke();
+            // Automatycznie zaczynamy łowić, jeśli spławik w wodzie i nie mamy ryby na haczyku
+            StartFishing();
         }
     }
 
     private void HandleWaiting()
     {
-        // Jeśli zestaw jest zwijany, pauzujemy licznik — gracz może zwijać
-        // kawałek i dalej łowić. Dopiero zwinięcie całej żyłki anuluje łowienie.
+        // Jeśli zestaw jest zwijany, pauzujemy licznik
         if (IsReelingActive())
             return;
 
@@ -121,6 +116,10 @@ public class FishingSystem : MonoBehaviour
             Debug.Log("<color=#FFA500>🎯 BRANIE! Naciśnij SPACJĘ!</color>");
             state = FishingState.Biting;
             OnBiting?.Invoke();
+
+            // Spławik "zanurza się" - staje się prawie niewidoczny
+            if (Bobber.Instance != null)
+                Bobber.Instance.SetBobberAlpha(0.1f);
         }
     }
 
@@ -130,7 +129,18 @@ public class FishingSystem : MonoBehaviour
         {
             float fishWeight = GetFishWeight();
 
-            Debug.Log("<color=#FFD700>🎯 HOOKED! Zwijaj (R)!</color>");
+            Debug.Log("<color=#FFD700>🎯 Ryba na haczyku! Przytrzymaj R, żeby zwijać!</color>");
+
+            // Zmieniamy ikonę spławika na rybkę (z skalowaniem od wagi)
+            Bobber currentBobber = FindAnyObjectByType<Bobber>();
+            if (currentBobber != null)
+            {
+                currentBobber.ChangeToFishIcon(fishWeight);
+            }
+            else
+            {
+                Debug.LogWarning("Nie znaleziono Bobber w scenie!");
+            }
 
             // Informujemy ReelInSystem o wadze ryby (wpłynie na szybkość zwijania)
             if (ReelInSystem.Instance != null)
@@ -146,6 +156,29 @@ public class FishingSystem : MonoBehaviour
     }
 
     // ===== METODY PUBLICZNE =====
+
+    /// <summary>
+    /// Rozpoczyna łowienie (automatycznie po wylądowaniu spławika).
+    /// </summary>
+    public void StartFishing()
+    {
+        if (state != FishingState.Idle || hasHookedFish)
+            return;
+
+        Debug.Log("<color=#00FF00>🎣 Zaczynasz łowić! Czekaj na branie...</color>");
+        state = FishingState.Waiting;
+        timer = 0f;
+        waitTime = Random.Range(minWaitTime, maxWaitTime);
+
+        // Jeśli jesteśmy w hotspocie, skracamy czas oczekiwania
+        if (FishSizes.Instance != null && FishSizes.Instance.IsInHotSpot)
+        {
+            waitTime *= FishSizes.Instance.HotSpotWaitTimeMultiplier;
+            Debug.Log($"<color=#00FF00>🔥 HotSpot: czas oczekiwania x{FishSizes.Instance.HotSpotWaitTimeMultiplier}</color>");
+        }
+
+        OnFishingStarted?.Invoke();
+    }
 
     /// <summary>
     /// ReelInSystem woła to gdy ryba dotrze do gracza (zostanie zwinięta).
@@ -189,4 +222,5 @@ public class FishingSystem : MonoBehaviour
             return FishSizes.Instance.GetRandomCarpWeight();
         return Random.Range(fallbackMinWeight, fallbackMaxWeight);
     }
+
 }

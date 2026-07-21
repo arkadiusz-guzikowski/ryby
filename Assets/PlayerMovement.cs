@@ -8,16 +8,35 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Rzut")]
     [SerializeField] private Key castKey = Key.Q;
+    [SerializeField] private GameObject bobberPrefab;
 
-    private Vector3 startPosition;
+    private bool hasStarted = false;
+    private GameObject currentBobber;
+    private SpriteRenderer playerSprite;
+
+    void Awake()
+    {
+        playerSprite = GetComponent<SpriteRenderer>();
+        if (playerSprite != null)
+            playerSprite.enabled = false;
+    }
 
     void Start()
     {
-        startPosition = transform.position;
+        Debug.Log("<color=#00FF00>══════════════════════════════════════════════════════════════════</color>");
+        Debug.Log("<color=#00FF00>  🎣 RYBY — Gra wędkarska  |  📍 Kliknij LPM, by ustawić pozycję  |  📖 Strzałki:ruch | LPM/Q:rzut | SPACJA: TNIJ!!! | R:zwijaj</color>");
+        Debug.Log("<color=#00FF00>══════════════════════════════════════════════════════════════════</color>");
     }
 
     void Update()
     {
+        // --- Ustawianie pozycji startowej myszką ---
+        if (!hasStarted)
+        {
+            HandleStartPlacement();
+            return;
+        }
+
         // --- RUCH (strzałki) ---
         Vector2 movement = Vector2.zero;
 
@@ -33,11 +52,97 @@ public class PlayerMovement : MonoBehaviour
 
         transform.Translate(movement.normalized * moveSpeed * Time.deltaTime);
 
-        // --- RZUT (Q) - mierzy odległość od punktu startowego ---
-        if (Keyboard.current[castKey].wasPressedThisFrame)
+        // --- RZUT (LPM lub Q) ---
+        if (Mouse.current.leftButton.wasPressedThisFrame || Keyboard.current[castKey].wasPressedThisFrame)
         {
-            float distance = Vector3.Distance(startPosition, transform.position);
-            Debug.Log($"<color=#00BFFF>🎣 Rzut! Odległość: <b>{distance:F1}m</b></color>");
+            CastFishingRod();
         }
+    }
+
+    private void HandleStartPlacement()
+    {
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(
+                new Vector3(Mouse.current.position.x.ReadValue(),
+                            Mouse.current.position.y.ReadValue(),
+                            0f)
+            );
+            mouseWorldPos.z = 0f;
+            transform.position = mouseWorldPos;
+            hasStarted = true;
+
+            // Pokazujemy gracza
+            if (playerSprite != null)
+                playerSprite.enabled = true;
+
+            Debug.Log($"<color=#00FF00>📍 Gracz ustawiony na pozycji: {mouseWorldPos}</color>");
+            Debug.Log("<color=#00FF00>🎣 Kliknij LPM lub Q, żeby rzucić spławik!</color>");
+        }
+    }
+
+    private void CastFishingRod()
+    {
+        // Pobierz pozycję myszki w świecie gry
+        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(
+            new Vector3(Mouse.current.position.x.ReadValue(),
+                        Mouse.current.position.y.ReadValue(),
+                        0f)
+        );
+        mouseWorldPos.z = 0f;
+
+        float distance = Vector3.Distance(transform.position, mouseWorldPos);
+        Debug.Log($"<color=#00BFFF>🎣 Rzut! Odległość: <b>{distance:F1}m</b></color>");
+
+        // Jeśli już istnieje spławik (i nie został zniszczony), przesuwamy go zamiast tworzyć nowy
+        if (currentBobber != null && currentBobber)
+        {
+            Bobber bobber = currentBobber.GetComponent<Bobber>();
+            if (bobber != null)
+            {
+                bobber.CastTo(mouseWorldPos);
+                Debug.Log($"<color=#00BFFF>📌 Spławik przesunięty do: {mouseWorldPos}</color>");
+                return;
+            }
+        }
+        else
+        {
+            // Referencja wisząca (spławik został zniszczony) — czyścimy
+            currentBobber = null;
+        }
+
+        // Spawn spławika
+        if (bobberPrefab != null)
+        {
+            currentBobber = Instantiate(bobberPrefab, transform.position, Quaternion.identity);
+            Debug.Log($"<color=#00BFFF>🆕 Spławik utworzony na pozycji gracza: {transform.position}</color>");
+            Bobber bobber = currentBobber.GetComponent<Bobber>();
+            if (bobber != null)
+            {
+                bobber.CastTo(mouseWorldPos);
+                Debug.Log($"<color=#00BFFF>📌 Spławik leci do: {mouseWorldPos}</color>");
+            }
+            else
+            {
+                Debug.LogError("Prefab spławika nie ma komponentu Bobber!");
+            }
+        }
+        else
+        {
+            Debug.LogError("Brak prefaba spławika! Przypisz BobberPrefab w Inspectorze.");
+        }
+    }
+
+    /// <summary>
+    /// Czy gracz już ustawił swoją pozycję startową.
+    /// </summary>
+    public bool HasStarted => hasStarted;
+
+    /// <summary>
+    /// Czyści referencję do spławika (gdy spławik został zniszczony przez FishingSystem).
+    /// </summary>
+    public void ClearBobberReference()
+    {
+        currentBobber = null;
     }
 }

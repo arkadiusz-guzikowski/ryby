@@ -2,15 +2,17 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Odpowiada za zwijanie zestawu (celownika) z powrotem do gracza.
+/// Odpowiada za zwijanie spławika (Bobber) z powrotem do gracza.
 /// 
 /// Klawisze:
-/// - R (przytrzymaj): zwijanie zestawu
+/// - R (przytrzymaj): zwijanie spławika
 /// - R (puść): przerwanie zwijania
 /// 
 /// Jeśli na haczyku jest ryba, zwijanie jest wolniejsze (im cięższa ryba, tym wolniej).
-/// Po dotarciu do celu: jeśli była ryba → informuje FishingSystem o złowieniu.
+/// Po dotarciu do celu: jeśli była ryba → informuje FishingSystem o złowieniu i niszczy spławik.
 /// Jeśli zwijanie zostało przerwane z rybą → resetuje stan w FishingSystem.
+/// 
+/// Skrypt powinien być na obiekcie spławika (Bobber).
 /// </summary>
 public class ReelInSystem : MonoBehaviour
 {
@@ -34,8 +36,8 @@ public class ReelInSystem : MonoBehaviour
     [SerializeField] private float distanceLogInterval = 0.5f;
     private float distanceLogTimer = 0f;
 
-    // Pozycja startowa (gdzie gracz stał gdy zaczął zwijać)
-    private Vector3 startPosition;
+    // Gracz (do niego zwijamy)
+    private Transform playerTransform;
 
     // Stan zwijania
     private bool isReeling = false;
@@ -58,16 +60,22 @@ public class ReelInSystem : MonoBehaviour
         if (fishAI == null)
             fishAI = GetComponent<FishAI>();
         if (fishAI == null)
-            fishAI = FindObjectOfType<FishAI>();
+            fishAI = FindAnyObjectByType<FishAI>();
     }
 
     void Start()
     {
-        startPosition = transform.position;
+        FindPlayer();
     }
 
     void Update()
     {
+        if (playerTransform == null)
+        {
+            FindPlayer();
+            return;
+        }
+
         // Obsługa blokady po dotarciu do celu
         if (waitingForRelease)
         {
@@ -104,13 +112,6 @@ public class ReelInSystem : MonoBehaviour
     {
         fishWeight = weight;
         hasFish = true;
-
-        // Jeśli zestaw jest już przy graczu, przesuwamy go na pozycję docelową
-        if (Vector3.Distance(transform.position, startPosition) < 0.1f)
-        {
-            Vector3 throwDirection = transform.right;
-            transform.position = startPosition + throwDirection * 10f;
-        }
 
         // Informujemy FishAI o zacięciu ryby
         if (fishAI != null)
@@ -153,13 +154,19 @@ public class ReelInSystem : MonoBehaviour
 
         isReeling = false;
 
-        float remainingDistance = Vector3.Distance(transform.position, startPosition);
+        float remainingDistance = Vector3.Distance(transform.position, playerTransform.position);
         Debug.Log($"<color=#FFA500>⏸️ Przerwano zwijanie. Pozostało: <b>{remainingDistance:F1}m</b></color>");
 
         // Jeśli przerwano zwijanie z rybą na haczyku, resetujemy stan łowienia
         if (wasReelingWithFish)
         {
             Debug.Log("<color=#FF4500>🐟 Ryba uciekła! Możesz zacząć łowić od nowa.</color>");
+
+            // Przywracamy sprite spławika (ryba uciekła)
+            Bobber bobber = GetComponent<Bobber>();
+            if (bobber != null)
+                bobber.ResetToBobberSprite();
+
             NotifyFishingSystemFishLost();
         }
     }
@@ -172,9 +179,10 @@ public class ReelInSystem : MonoBehaviour
         if (hasFish && fishAI != null)
             fishAI.UpdateFishMovement();
 
+        // Zwijamy spławik do gracza
         transform.position = Vector3.MoveTowards(
             transform.position,
-            startPosition,
+            playerTransform.position,
             currentSpeed * Time.deltaTime
         );
 
@@ -183,14 +191,14 @@ public class ReelInSystem : MonoBehaviour
         if (distanceLogTimer >= distanceLogInterval)
         {
             distanceLogTimer = 0f;
-            float remainingDistance = Vector3.Distance(transform.position, startPosition);
+            float remainingDistance = Vector3.Distance(transform.position, playerTransform.position);
             Debug.Log($"<color=#87CEEB>📏 Pozostało: <b>{remainingDistance:F1}m</b></color>");
         }
 
         // Dotarcie do celu
-        if (Vector3.Distance(transform.position, startPosition) < 0.01f)
+        if (Vector3.Distance(transform.position, playerTransform.position) < 0.01f)
         {
-            transform.position = startPosition;
+            transform.position = playerTransform.position;
             isReeling = false;
 
             if (hasFish)
@@ -212,6 +220,9 @@ public class ReelInSystem : MonoBehaviour
 
             // Blokada: gracz musi puścić R zanim będzie mógł znowu zwijać
             waitingForRelease = true;
+
+            // Zniszcz spławik po dotarciu do celu
+            DestroyBobber();
         }
     }
 
@@ -239,5 +250,27 @@ public class ReelInSystem : MonoBehaviour
 
         if (FishingSystem.Instance != null)
             FishingSystem.Instance.OnFishLanded();
+    }
+
+    private void FindPlayer()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+            playerTransform = player.transform;
+    }
+
+    /// <summary>
+    /// Niszczy spławik po dotarciu do celu (ryba złowiona lub anulowano).
+    /// </summary>
+    private void DestroyBobber()
+    {
+        // Resetuj Instancę jeśli to ten spławik
+        if (Bobber.Instance != null && Bobber.Instance.gameObject == gameObject)
+        {
+            // Nie ustawiamy null, bo może być potrzebny w innych skryptach
+        }
+
+        // Niszczymy cały obiekt spławika
+        Destroy(gameObject);
     }
 }

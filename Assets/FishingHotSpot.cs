@@ -33,7 +33,8 @@ public class FishingHotSpot : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag(playerTag))
+        // Reagujemy zarówno na gracza, jak i na spławik (Bobber)
+        if (other.CompareTag(playerTag) || other.GetComponent<Bobber>() != null)
         {
             if (FishSizes.Instance != null)
             {
@@ -55,7 +56,8 @@ public class FishingHotSpot : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (other.CompareTag(playerTag))
+        // Reagujemy zarówno na gracza, jak i na spławik (Bobber)
+        if (other.CompareTag(playerTag) || other.GetComponent<Bobber>() != null)
         {
             if (FishSizes.Instance != null)
             {
