@@ -4,6 +4,8 @@ public class FishSizes : MonoBehaviour
 {
     public static FishSizes Instance;
 
+    public bool IsInHotSpot { get; set; } = false;
+
     [SerializeField] [Range(0f, 100f)] private float chance1_5kg = 30f;
     [SerializeField] [Range(0f, 100f)] private float chance5_10kg = 30f;
     [SerializeField] [Range(0f, 100f)] private float chance10_20kg = 20f;
@@ -31,6 +33,14 @@ public class FishSizes : MonoBehaviour
 
     public float GetRandomCarpWeight()
     {
+        // Gorące miejsce = 100% szansa na rybę 30-40kg
+        if (IsInHotSpot)
+        {
+            float weight = Random.Range(30f, 40f);
+            Debug.Log($"<color=#FF4500>🔥 GORĄCE MIEJSCE! Gigantyczny karp: {weight}kg!</color>");
+            return weight;
+        }
+
         float total = chance1_5kg + chance5_10kg + chance10_20kg + chance20_30kg + chance30_40kg;
         if (total <= 0f) return 1f;
 
