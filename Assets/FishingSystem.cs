@@ -96,6 +96,14 @@ public class FishingSystem : MonoBehaviour
             state = FishingState.Waiting;
             timer = 0f;
             waitTime = Random.Range(minWaitTime, maxWaitTime);
+
+            // Jeśli jesteśmy w hotspocie, skracamy czas oczekiwania
+            if (FishSizes.Instance != null && FishSizes.Instance.IsInHotSpot)
+            {
+                waitTime *= FishSizes.Instance.HotSpotWaitTimeMultiplier;
+                Debug.Log($"<color=#00FF00>🔥 HotSpot: czas oczekiwania x{FishSizes.Instance.HotSpotWaitTimeMultiplier}</color>");
+            }
+
             OnFishingStarted?.Invoke();
         }
     }
