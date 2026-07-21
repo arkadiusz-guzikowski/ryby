@@ -135,9 +135,7 @@ public class Bobber : MonoBehaviour
             Vector3 newScale = new Vector3(scale, scale, 1f);
             transform.localScale = newScale;
 
-            Debug.Log($"<color=#FFD700>🐟 Ikona zmieniona na rybkę! Waga: {fishWeight:F1}kg, " +
-                      $"t={t:F2}, min={minFishScale}, max={maxFishScale}, " +
-                      $"Skala: {scale:F2}, localScale={transform.localScale}</color>");
+            // Log usunięty — nie chcemy psuć niespodzianki pokazując wagę przed złowieniem
         }
         else
         {

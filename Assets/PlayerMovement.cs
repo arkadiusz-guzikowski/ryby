@@ -83,6 +83,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void CastFishingRod()
     {
+        // Blokada: jeśli spławik już istnieje (w wodzie lub leci), nie można rzucić ponownie
+        if (currentBobber != null)
+        {
+            Debug.Log("<color=#FFA500>⛔ Najpierw zwiń zestaw (R) zanim rzucisz ponownie!</color>");
+            return;
+        }
+
         // Pobierz pozycję myszki w świecie gry
         Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(
             new Vector3(Mouse.current.position.x.ReadValue(),
@@ -91,25 +98,16 @@ public class PlayerMovement : MonoBehaviour
         );
         mouseWorldPos.z = 0f;
 
+        // Sprawdź czy cel jest w water zone
+        WaterZoneChecker waterZone = FindAnyObjectByType<WaterZoneChecker>();
+        if (waterZone == null || !waterZone.IsPointInWater(mouseWorldPos))
+        {
+            Debug.Log("<color=#FFA500>⛔ Rzut poza wodę! Powtórz rzut w obrębie jeziora.</color>");
+            return;
+        }
+
         float distance = Vector3.Distance(transform.position, mouseWorldPos);
         Debug.Log($"<color=#00BFFF>🎣 Rzut! Odległość: <b>{distance:F1}m</b></color>");
-
-        // Jeśli już istnieje spławik (i nie został zniszczony), przesuwamy go zamiast tworzyć nowy
-        if (currentBobber != null && currentBobber)
-        {
-            Bobber bobber = currentBobber.GetComponent<Bobber>();
-            if (bobber != null)
-            {
-                bobber.CastTo(mouseWorldPos);
-                Debug.Log($"<color=#00BFFF>📌 Spławik przesunięty do: {mouseWorldPos}</color>");
-                return;
-            }
-        }
-        else
-        {
-            // Referencja wisząca (spławik został zniszczony) — czyścimy
-            currentBobber = null;
-        }
 
         // Spawn spławika
         if (bobberPrefab != null)

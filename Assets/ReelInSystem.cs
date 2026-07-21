@@ -120,6 +120,17 @@ public class ReelInSystem : MonoBehaviour
 
     public bool IsReeling => isReeling;
 
+    /// <summary>
+    /// Resetuje stan ryby (np. po ucieczce przez FishEscapeZone).
+    /// </summary>
+    public void ResetFish()
+    {
+        hasFish = false;
+        fishWeight = 0f;
+        wasReelingWithFish = false;
+        isReeling = false;
+    }
+
     // ===== PRYWATNE =====
 
     private float GetCurrentReelSpeed()
@@ -233,6 +244,11 @@ public class ReelInSystem : MonoBehaviour
         Debug.Log($"<color=#00FF00>  {fishEmoji}  ZŁOWIONO RYBĘ!  {fishEmoji}</color>");
         Debug.Log($"<color=#00FF00>  Waga: <b>{fishWeight:F1} kg</b></color>");
         Debug.Log($"<color=#00FF00>═══════════════════════════════════</color>");
+
+        // Informujemy FishEscapeZone że ryba została złowiona (blokuje fałszywą ucieczkę)
+        FishEscapeZone escapeZone = FindAnyObjectByType<FishEscapeZone>();
+        if (escapeZone != null)
+            escapeZone.OnFishResolved();
 
         // Informujemy FishingSystem
         if (FishingSystem.Instance != null)

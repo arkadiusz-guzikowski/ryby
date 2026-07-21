@@ -32,6 +32,10 @@ public class FishAI : MonoBehaviour
     [Tooltip("Minimalny odstęp między ucieczkami do tyłu (sekundy).")]
     [SerializeField] private float backwardEscapeCooldown = 2f;
 
+    [Header("Spięcie ryby")]
+    [Tooltip("Szansa na spięcie ryby w ciągu minuty holu (0-100%). Np. 10 = 10% szansy na minutę, że ryba się spnie i ucieknie.")]
+    [SerializeField] private float spinkaChancePercentPerMinute = 10f;
+
     // Referencje
     private ReelInSystem reelInSystem;
     private Transform playerTransform;
@@ -43,6 +47,9 @@ public class FishAI : MonoBehaviour
     private float sideChangeTimer = 0f;
     private float sideChangeInterval = 0f;
     private float backwardCooldownTimer = 0f;
+
+    // Spięcie
+    private float spinkaCooldownTimer = 0f;
 
     // Płynna ucieczka (wspólna dla spłoszenia i ucieczki do tyłu)
     private Vector3 smoothEscapeTarget;
@@ -77,6 +84,10 @@ public class FishAI : MonoBehaviour
         // Odliczamy cooldown ucieczki do tyłu
         if (backwardCooldownTimer > 0f)
             backwardCooldownTimer -= Time.deltaTime;
+
+        // Odliczamy cooldown spięcia
+        if (spinkaCooldownTimer > 0f)
+            spinkaCooldownTimer -= Time.deltaTime;
     }
 
     // ===== PUBLICZNE =====
@@ -185,6 +196,35 @@ public class FishAI : MonoBehaviour
             backwardCooldownTimer = backwardEscapeCooldown;
 
             Debug.Log($"<color=#FFA500>🐟 Ryba ucieka! Cel: {escapeAmount:F1}m do tyłu.</color>");
+        }
+
+        // --- Spięcie ryby (losowe, ryba ucieka definitywnie) ---
+        // Przeliczamy % na minutę na szansę na sekundę
+        float spinkaChancePerSecond = (spinkaChancePercentPerMinute / 100f) / 60f;
+        if (spinkaCooldownTimer <= 0f && Random.value < spinkaChancePerSecond * Time.deltaTime)
+        {
+            Debug.Log($"<color=#FF4500>⚡ SPINKA! Ryba się spięła i uciekła!</color>");
+
+            // Przywracamy sprite spławika
+            Bobber bobber = GetComponent<Bobber>();
+            if (bobber != null)
+                bobber.ResetToBobberSprite();
+
+            // Informujemy FishEscapeZone że ryba uciekła (blokuje fałszywy komunikat "uciekła na mieliznę")
+            FishEscapeZone escapeZone = FindAnyObjectByType<FishEscapeZone>();
+            if (escapeZone != null)
+                escapeZone.OnFishResolved();
+
+            // Resetujemy stan w ReelInSystem
+            if (reelInSystem != null)
+                reelInSystem.ResetFish();
+
+            // Resetujemy stan w FishingSystem
+            if (FishingSystem.Instance != null)
+                FishingSystem.Instance.OnFishLanded();
+
+            // Niszczymy spławik (ryba uciekła)
+            Destroy(gameObject);
         }
     }
 

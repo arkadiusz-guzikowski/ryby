@@ -57,6 +57,7 @@ MonoBehaviour:
   maxBackwardEscape: 2
   backwardEscapeSpeed: 3
   backwardEscapeCooldown: 2
+  spinkaChancePercentPerMinute: 20
 --- !u!114 &221191502910486962
 MonoBehaviour:
   m_ObjectHideFlags: 0

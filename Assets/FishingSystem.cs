@@ -146,6 +146,11 @@ public class FishingSystem : MonoBehaviour
             if (ReelInSystem.Instance != null)
                 ReelInSystem.Instance.SetFishWeight(fishWeight);
 
+            // Informujemy FishEscapeZone o zacięciu (ryba ucieknie jeśli spławik opuści wodę)
+            FishEscapeZone escapeZone = FindAnyObjectByType<FishEscapeZone>();
+            if (escapeZone != null)
+                escapeZone.OnFishHooked();
+
             // Wywołujemy event zacięcia
             OnFishHooked?.Invoke(fishWeight);
 
