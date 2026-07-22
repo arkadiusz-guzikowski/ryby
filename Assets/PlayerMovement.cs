@@ -12,6 +12,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Key castKey = Key.Q;
     [SerializeField] private GameObject bobberPrefab;
 
+    [Header("Dźwięki")]
+    [SerializeField] private AudioClip dźwiękRzutu;
+    [SerializeField] private AudioSource audioSource;
+
     [Header("Siła rzutu")]
     [Tooltip("Minimalna odległość rzutu (przy szybkim kliknięciu).")]
     [SerializeField] private float minCastDistance = 2f;
@@ -34,7 +38,14 @@ public class PlayerMovement : MonoBehaviour
         playerSprite = GetComponent<SpriteRenderer>();
         if (playerSprite != null)
             playerSprite.enabled = false;
+
+        // Automatycznie znajdź AudioSource jeśli nie przypisany
+        if (audioSource == null)
+            audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
     }
+
 
     void Start()
     {
@@ -106,7 +117,12 @@ public class PlayerMovement : MonoBehaviour
                 isCharging = false;
                 float chargePercent = Mathf.Clamp01(chargeTimer / maxChargeTime);
                 CastFishingRodWithPower(chargePercent);
+
+                // Dźwięk rzutu
+                if (dźwiękRzutu != null && audioSource != null)
+                    audioSource.PlayOneShot(dźwiękRzutu);
             }
+
         }
     }
 
@@ -189,12 +205,17 @@ public class PlayerMovement : MonoBehaviour
             {
                 Debug.LogError("Prefab spławika nie ma komponentu Bobber!");
             }
+
+            // Synchronizuj ustawienia z GameManagera na nowym spławiku
+            if (GameManager.Instance != null)
+                GameManager.Instance.SyncAllSettings();
         }
         else
         {
             Debug.LogError("Brak prefaba spławika! Przypisz BobberPrefab w Inspectorze.");
         }
     }
+
 
     /// <summary>
     /// Czy gracz już ustawił swoją pozycję startową.

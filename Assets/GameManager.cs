@@ -22,19 +22,19 @@ public class GameManager : MonoBehaviour
     [Header("═══════════════════════════════════════")]
     [Header("🏃 RUCH GRACZA")]
     [Header("═══════════════════════════════════════")]
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float predkoscRuchu = 5f;
 
     [Header("Rzut")]
-    [SerializeField] private Key castKey = Key.Q;
-    [SerializeField] private GameObject bobberPrefab;
+    [SerializeField] private Key klawiszRzutu = Key.Q;
+    [SerializeField] private GameObject prefabSpławika;
 
     [Header("Siła rzutu")]
     [Tooltip("Minimalna odległość rzutu (szybkie kliknięcie).")]
-    [SerializeField] private float minCastDistance = 2f;
+    [SerializeField] private float minOdległośćRzutu = 2f;
     [Tooltip("Maksymalna odległość rzutu (pełne naładowanie).")]
-    [SerializeField] private float maxCastDistance = 15f;
+    [SerializeField] private float maxOdległośćRzutu = 15f;
     [Tooltip("Czas ładowania do pełnej siły (sekundy).")]
-    [SerializeField] private float maxChargeTime = 2f;
+    [SerializeField] private float czasŁadowania = 2f;
 
     // ============================================================
     // 🎣 SYSTEM ŁOWIENIA (FishingSystem)
@@ -44,15 +44,15 @@ public class GameManager : MonoBehaviour
     [Header("🎣 SYSTEM ŁOWIENIA")]
     [Header("═══════════════════════════════════════")]
     [Header("Czas oczekiwania na branie")]
-    [SerializeField] private float minWaitTime = 2f;
-    [SerializeField] private float maxWaitTime = 5f;
+    [SerializeField] private float minCzasOczekiwania = 2f;
+    [SerializeField] private float maxCzasOczekiwania = 5f;
 
     [Header("Awaryjna waga ryby")]
-    [SerializeField] private float fallbackMinWeight = 1f;
-    [SerializeField] private float fallbackMaxWeight = 40f;
+    [SerializeField] private float awaryjnaMinWaga = 1f;
+    [SerializeField] private float awaryjnaMaxWaga = 40f;
 
     [Header("Klawisz zacięcia")]
-    [SerializeField] private Key actionKey = Key.Space;
+    [SerializeField] private Key klawiszAkcji = Key.Space;
 
     // ============================================================
     // 🐟 ROZMIARY RYB (FishSizes)
@@ -62,11 +62,11 @@ public class GameManager : MonoBehaviour
     [Header("🐟 SZANSE NA WAGĘ RYBY")]
     [Header("═══════════════════════════════════════")]
     [Header("Procentowe szanse (muszą sumować się do 100%)")]
-    [SerializeField] [Range(0f, 100f)] private float chance1_5kg = 30f;
-    [SerializeField] [Range(0f, 100f)] private float chance5_10kg = 30f;
-    [SerializeField] [Range(0f, 100f)] private float chance10_20kg = 20f;
-    [SerializeField] [Range(0f, 100f)] private float chance20_30kg = 15f;
-    [SerializeField] [Range(0f, 100f)] private float chance30_40kg = 5f;
+    [SerializeField] [Range(0f, 100f)] private float szansa1_5kg = 30f;
+    [SerializeField] [Range(0f, 100f)] private float szansa5_10kg = 30f;
+    [SerializeField] [Range(0f, 100f)] private float szansa10_20kg = 20f;
+    [SerializeField] [Range(0f, 100f)] private float szansa20_30kg = 15f;
+    [SerializeField] [Range(0f, 100f)] private float szansa30_40kg = 5f;
 
     // ============================================================
     // 🌀 ZWIJANIE (ReelInSystem)
@@ -75,15 +75,60 @@ public class GameManager : MonoBehaviour
     [Header("═══════════════════════════════════════")]
     [Header("🌀 ZWIJANIE ZESTAWU")]
     [Header("═══════════════════════════════════════")]
-    [SerializeField] private Key reelKey = Key.R;
-    [SerializeField] private float baseReelSpeed = 5f;
+    [SerializeField] private Key klawiszZwijania = Key.R;
+    [SerializeField] private float bazowaPrędkośćZwijania = 5f;
     [Tooltip("Prędkość zwijania podczas holu ryby.")]
-    [SerializeField] private float reelSpeedWithFish = 3f;
+    [SerializeField] private float prędkośćZwijaniaZRyba = 3f;
 
     [Header("Krzywa szybkości zwijania")]
     [Tooltip("X = waga ryby, Y = mnożnik prędkości (0-1).")]
-    [SerializeField] private AnimationCurve speedMultiplierCurve = AnimationCurve.Linear(0f, 1f, 40f, 0.1f);
-    [SerializeField] private float maxFishWeight = 40f;
+    [SerializeField] private AnimationCurve krzywaPrędkości = AnimationCurve.Linear(0f, 1f, 40f, 0.1f);
+    [SerializeField] private float maxWagaRyby = 40f;
+
+    // ============================================================
+    // 🎯 SKILL CHECK (SkillCheckSystem)
+    // ============================================================
+
+    [Header("═══════════════════════════════════════")]
+    [Header("🎯 SKILL CHECK")]
+    [Header("═══════════════════════════════════════")]
+    [Tooltip("Prędkość igły (pikseli/sek).")]
+    [SerializeField] private float prędkośćIgły = 300f;
+    [Tooltip("Szerokość dobrej strefy (w % paska, 0-1).")]
+    [SerializeField] private float szerokośćDobrejStrefy = 0.25f;
+    [Tooltip("Szerokość idealnej strefy (w % dobrej strefy, 0-1).")]
+    [SerializeField] private float szerokośćIdealnejStrefy = 0.2f;
+    [Tooltip("Czas na kliknięcie (sekundy). 0 = bez limitu.")]
+    [SerializeField] private float limitCzasu = 3f;
+    [Tooltip("Klawisz do kliknięcia.")]
+    [SerializeField] private Key klawiszSkillCheck = Key.Space;
+    [Tooltip("Czy skill check ma być aktywny podczas holu ryby?")]
+    [SerializeField] private bool skillCheckWłączony = true;
+    [Tooltip("Minimalna trudność skill checka (0-1).")]
+    [SerializeField] private float minTrudność = 0.2f;
+    [Tooltip("Maksymalna trudność skill checka (0-1).")]
+    [SerializeField] private float maxTrudność = 0.7f;
+    [Tooltip("Szansa (%) na pojawienie się skill checka w ciągu minuty. Np. 60 = średnio 0.6/min, 500 = średnio 5/min.")]
+    [SerializeField] [Range(0f, 3000f)] private float szansaSkillCheckNaMinutę = 600f;
+    [Tooltip("Bonus do prędkości zwijania za Dobry skill check (mnożnik).")]
+    [SerializeField] private float bonusZaDobry = 1.3f;
+    [Tooltip("Bonus do prędkości zwijania za Idealny skill check (mnożnik).")]
+    [SerializeField] private float bonusZaIdealny = 1.8f;
+    [Tooltip("Czas trwania bonusu po udanym skill checku (sekundy).")]
+    [SerializeField] private float czasTrwaniaBonus = 1.5f;
+    [Tooltip("Czy po nieudanym skill checku (miss/czas) ryba ucieka?")]
+    [SerializeField] private bool porażkaTraciRybe = true;
+
+    // ============================================================
+    // 🎵 MUZYKA W TLE
+    // ============================================================
+
+    [Header("═══════════════════════════════════════")]
+    [Header("🎵 MUZYKA W TLE")]
+    [Header("═══════════════════════════════════════")]
+    [SerializeField] private AudioClip muzykaWTle;
+    [SerializeField] [Range(0f, 1f)] private float głośnośćMuzyki = 0.5f;
+    private AudioSource muzykaSource;
 
     // ============================================================
     // ⏸️ PAUZA I DEBUG
@@ -92,9 +137,10 @@ public class GameManager : MonoBehaviour
     [Header("═══════════════════════════════════════")]
     [Header("⏸️ PAUZA I DEBUG")]
     [Header("═══════════════════════════════════════")]
-    [SerializeField] private Key pauseKey = Key.Escape;
-    [SerializeField] private bool startPaused = false;
-    [SerializeField] private bool verboseLogs = true;
+    [SerializeField] private Key klawiszPauzy = Key.Escape;
+    [SerializeField] private bool startZPauza = false;
+    [SerializeField] private bool szczegółoweLogi = true;
+
 
     // ============================================================
     // 📊 STAN GRY
@@ -129,7 +175,7 @@ public class GameManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        if (startPaused)
+        if (startZPauza)
         {
             currentState = GameState.Paused;
             Time.timeScale = 0f;
@@ -139,12 +185,14 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         SyncAllSettings();
+        UruchomMuzykęWTle();
         Log("🎮 GameManager uruchomiony!");
     }
 
+
     void Update()
     {
-        if (Keyboard.current[pauseKey].wasPressedThisFrame)
+        if (Keyboard.current[klawiszPauzy].wasPressedThisFrame)
             TogglePause();
 
         UpdateGameState();
@@ -161,16 +209,22 @@ public class GameManager : MonoBehaviour
     public void SyncAllSettings()
     {
         if (PlayerMovement.Instance != null)
-            PlayerMovement.Instance.SetSettings(moveSpeed, castKey, bobberPrefab, minCastDistance, maxCastDistance, maxChargeTime);
+            PlayerMovement.Instance.SetSettings(predkoscRuchu, klawiszRzutu, prefabSpławika, minOdległośćRzutu, maxOdległośćRzutu, czasŁadowania);
 
         if (FishingSystem.Instance != null)
-            FishingSystem.Instance.SetSettings(minWaitTime, maxWaitTime, fallbackMinWeight, fallbackMaxWeight, actionKey);
+            FishingSystem.Instance.SetSettings(minCzasOczekiwania, maxCzasOczekiwania, awaryjnaMinWaga, awaryjnaMaxWaga, klawiszAkcji);
 
         if (FishSizes.Instance != null)
-            FishSizes.Instance.SetChances(chance1_5kg, chance5_10kg, chance10_20kg, chance20_30kg, chance30_40kg);
+            FishSizes.Instance.SetChances(szansa1_5kg, szansa5_10kg, szansa10_20kg, szansa20_30kg, szansa30_40kg);
 
         if (ReelInSystem.Instance != null)
-            ReelInSystem.Instance.SetSettings(reelKey, baseReelSpeed, reelSpeedWithFish, speedMultiplierCurve, maxFishWeight);
+            ReelInSystem.Instance.SetSettings(klawiszZwijania, bazowaPrędkośćZwijania, prędkośćZwijaniaZRyba, krzywaPrędkości, maxWagaRyby);
+
+        if (ReelInSystem.Instance != null)
+            ReelInSystem.Instance.SetSkillCheckSettings(skillCheckWłączony, minTrudność, maxTrudność, szansaSkillCheckNaMinutę, bonusZaDobry, bonusZaIdealny, czasTrwaniaBonus, porażkaTraciRybe);
+
+        if (SkillCheckSystem.Instance != null)
+            SkillCheckSystem.Instance.SetSettings(prędkośćIgły, szerokośćDobrejStrefy, szerokośćIdealnejStrefy, limitCzasu, klawiszSkillCheck);
 
         Log("🔄 Ustawienia zsynchronizowane z systemami!");
     }
@@ -295,16 +349,43 @@ public class GameManager : MonoBehaviour
     public bool HasPlayerStarted() => PlayerMovement.Instance != null && PlayerMovement.Instance.HasStarted;
 
     // ============================================================
+    // 🎵 MUZYKA W TLE
+    // ============================================================
+
+    private void UruchomMuzykęWTle()
+    {
+        if (muzykaWTle == null)
+        {
+            Log("🎵 Brak przypisanego AudioClip dla muzyki w tle.");
+            return;
+        }
+
+        // Szukamy istniejącego AudioSource lub dodajemy nowy
+        muzykaSource = GetComponent<AudioSource>();
+        if (muzykaSource == null)
+            muzykaSource = gameObject.AddComponent<AudioSource>();
+
+        muzykaSource.clip = muzykaWTle;
+        muzykaSource.volume = głośnośćMuzyki;
+        muzykaSource.loop = true;
+        muzykaSource.playOnAwake = false;
+        muzykaSource.Play();
+
+        Log($"🎵 Muzyka w tle uruchomiona (głośność: {głośnośćMuzyki:P0})");
+    }
+
+    // ============================================================
     // 📋 LOGOWANIE
     // ============================================================
 
     private void Log(string message)
     {
-        if (verboseLogs)
+        if (szczegółoweLogi)
             Debug.Log($"<color=#FF69B4>[GameManager]</color> {message}");
     }
 
     void OnDestroy()
+
     {
         if (Instance == this) Instance = null;
     }

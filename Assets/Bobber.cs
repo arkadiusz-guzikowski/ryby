@@ -21,6 +21,10 @@ public class Bobber : MonoBehaviour
     [Tooltip("Wysokość paraboli lotu (0 = brak, większa = wyższy łuk).")]
     [SerializeField] private float arcHeight = 3f;
 
+    [Header("Dźwięki")]
+    [SerializeField] private AudioClip dźwiękPlusk;
+    [SerializeField] private AudioSource audioSource;
+
     [Header("Ikona ryby po zacięciu")]
     [Tooltip("Sprite rybki, który pojawi się po naciśnięciu SPACJI (zaciśnięcie ryby).")]
     [SerializeField] private Sprite fishIcon;
@@ -54,7 +58,14 @@ public class Bobber : MonoBehaviour
             originalSprite = spriteRenderer.sprite;
             originalColor = spriteRenderer.color;
         }
+
+        // Automatycznie znajdź AudioSource jeśli nie przypisany
+        if (audioSource == null)
+            audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
     }
+
 
     void Update()
     {
@@ -70,7 +81,13 @@ public class Bobber : MonoBehaviour
                 isFlying = false;
                 isInWater = true;
                 Debug.Log($"<color=#00BFFF>🎣 Spławik w wodzie! Pozycja: {targetPosition}</color>");
+
+                // Dźwięk plusku
+                if (dźwiękPlusk != null && audioSource != null)
+                    audioSource.PlayOneShot(dźwiękPlusk);
+
                 return;
+
             }
 
             // Pozycja: lerp po linii prostej + parabola w górę

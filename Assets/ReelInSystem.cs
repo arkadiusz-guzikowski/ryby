@@ -24,6 +24,26 @@ public class ReelInSystem : MonoBehaviour
     [Tooltip("Prędkość zwijania podczas holu ryby (gdy ryba na haczyku).")]
     [SerializeField] private float reelSpeedWithFish = 3f;
 
+    [Header("Skill Check")]
+    [Tooltip("Czy skill check ma być aktywny podczas holu ryby?")]
+    [SerializeField] private bool skillCheckEnabled = true;
+    [Tooltip("Minimalna trudność skill checka (0-1).")]
+    [SerializeField] private float skillCheckMinDifficulty = 0.2f;
+    [Tooltip("Maksymalna trudność skill checka (0-1).")]
+    [SerializeField] private float skillCheckMaxDifficulty = 0.7f;
+    [Tooltip("Szansa (%) na pojawienie się skill checka w ciągu minuty. Np. 60 = średnio 0.6/min, 500 = średnio 5/min.")]
+    [SerializeField] [Range(0f, 3000f)] private float szansaSkillCheckNaMinutę = 600f;
+    [Tooltip("Maksymalny czas (sekundy) bez skill checka, po którym pojawia się gwarantowany. 0 = brak gwarancji.")]
+    [SerializeField] private float gwarantowanyCoSekund = 0f;
+    [Tooltip("Bonus do prędkości zwijania za Good skill check (mnożnik).")]
+    [SerializeField] private float goodSpeedBonus = 1.3f;
+    [Tooltip("Bonus do prędkości zwijania za Perfect skill check (mnożnik).")]
+    [SerializeField] private float perfectSpeedBonus = 1.8f;
+    [Tooltip("Czas trwania bonusu po udanym skill checku (sekundy).")]
+    [SerializeField] private float bonusDuration = 1.5f;
+    [Tooltip("Czy po nieudanym skill checku (miss/czas) ryba ucieka?")]
+    [SerializeField] private bool failLosesFish = true;
+
     [Header("Krzywa szybkości zwijania")]
     [Tooltip("X = waga ryby (0 do maxFishWeight), Y = mnożnik prędkości (0-1).")]
     [SerializeField] private AnimationCurve speedMultiplierCurve = AnimationCurve.Linear(0f, 1f, 40f, 0.1f);
@@ -51,6 +71,12 @@ public class ReelInSystem : MonoBehaviour
 
     // Blokada: po dotarciu do celu, blokujemy ponowne zwijanie dopóki gracz nie puści R
     private bool waitingForRelease = false;
+
+    // Skill check
+    private float currentSpeedBonus = 1f;
+    private float bonusTimer = 0f;
+    private float skillCheckRollTimer = 0f;
+    private float czasBezSkillChecka = 0f;
 
     void Awake()
     {
@@ -190,11 +216,104 @@ public class ReelInSystem : MonoBehaviour
         if (hasFish && fishAI != null)
             fishAI.UpdateFishMovement();
 
-        // Zwijamy spławik do gracza
+        // === SKILL CHECK — TYLKO podczas holu ryby (przytrzymany R + ryba na haczyku) ===
+        if (isReeling && hasFish && skillCheckEnabled && SkillCheckSystem.Instance != null)
+        {
+            // Bonus czasowy — odliczaj
+            if (currentSpeedBonus > 1f)
+            {
+                bonusTimer -= Time.deltaTime;
+                if (bonusTimer <= 0f)
+                {
+                    currentSpeedBonus = 1f;
+                    Debug.Log("<color=#FFA500>⚡ Bonus z skill checka wygasł.</color>");
+                }
+            }
+
+            // Odliczanie czasu bez skill checka (rośnie tylko gdy skill check nie jest aktywny)
+            if (!SkillCheckSystem.Instance.IsActive)
+                czasBezSkillChecka += Time.deltaTime;
+
+            // Szansa na skill check — co sekundę rzucamy kostką
+            skillCheckRollTimer += Time.deltaTime;
+            if (skillCheckRollTimer >= 1f && !SkillCheckSystem.Instance.IsActive)
+            {
+                skillCheckRollTimer = 0f;
+
+                // Przelicz szansę na minutę na szansę na sekundę (0-1)
+                // Np. 600/min = 10/sek = 10% na sekundę
+                float chancePerSecond = szansaSkillCheckNaMinutę / 60f / 100f;
+
+                // Gwarantowany skill check jeśli minął maksymalny czas bez niego
+                bool guaranteed = gwarantowanyCoSekund > 0f && czasBezSkillChecka >= gwarantowanyCoSekund;
+
+                bool skillCheckTriggered = Random.value <= chancePerSecond || guaranteed;
+
+                if (skillCheckTriggered)
+                {
+                    if (guaranteed)
+                        Debug.Log($"<color=#FFD700>🎯 Gwarantowany skill check po {czasBezSkillChecka:F1}s bez!</color>");
+                    else
+                        Debug.Log($"<color=#FFD700>🎯 Losowy skill check! (szansa: {chancePerSecond * 100f:F1}%/s, czasBez: {czasBezSkillChecka:F1}s)</color>");
+
+                    czasBezSkillChecka = 0f;
+
+                    // Trudność zależna od wagi ryby (cięższa = trudniejszy)
+                    float difficulty = Mathf.Lerp(skillCheckMinDifficulty, skillCheckMaxDifficulty,
+                        Mathf.Clamp01(fishWeight / maxFishWeight));
+
+                    SkillCheckSystem.Instance.StartSkillCheck(difficulty,
+                        onComplete: (result) => {
+                            if (result == SkillCheckSystem.SkillCheckResult.Perfect)
+                            {
+                                currentSpeedBonus = perfectSpeedBonus;
+                                Debug.Log($"<color=#FFD700>🌟🌟🌟 PERFECT! Bonus x{perfectSpeedBonus} do prędkości!</color>");
+                            }
+                            else
+                            {
+                                currentSpeedBonus = goodSpeedBonus;
+                                Debug.Log($"<color=#00FF00>✅ Good! Bonus x{goodSpeedBonus} do prędkości!</color>");
+                            }
+                            bonusTimer = bonusDuration;
+                        },
+                        onFail: () => {
+                            currentSpeedBonus = 1f;
+                            Debug.Log("<color=#FF4500>❌ Miss! Brak bonusu.</color>");
+
+                            // Jeśli failLosesFish = true → ryba ucieka!
+                            if (failLosesFish)
+                            {
+                                Debug.Log("<color=#FF4500>🐟 Ryba uciekła przez nieudany skill check!</color>");
+                                FishEscapeZone escapeZone = FindAnyObjectByType<FishEscapeZone>();
+                                if (escapeZone != null)
+                                    escapeZone.OnFishResolved(); // blokuje fałszywą ucieczkę przez strefę
+
+                                // Reset stanu ryby
+                                hasFish = false;
+                                fishWeight = 0f;
+                                wasReelingWithFish = false;
+                                isReeling = false;
+                                currentSpeedBonus = 1f;
+
+                                // Przywracamy sprite spławika
+                                Bobber bobber = GetComponent<Bobber>();
+                                if (bobber != null)
+                                    bobber.ResetToBobberSprite();
+
+                                NotifyFishingSystemFishLost();
+                            }
+                        }
+                    );
+                }
+            }
+        }
+
+
+        // Zwijamy spławik do gracza (z bonusem z skill checka)
         transform.position = Vector3.MoveTowards(
             transform.position,
             playerTransform.position,
-            currentSpeed * Time.deltaTime
+            currentSpeed * currentSpeedBonus * Time.deltaTime
         );
 
         // Logowanie dystansu
@@ -282,6 +401,21 @@ public class ReelInSystem : MonoBehaviour
         reelSpeedWithFish = speedWithFish;
         speedMultiplierCurve = speedCurve;
         maxFishWeight = maxFishW;
+    }
+
+    /// <summary>
+    /// Synchronizuje ustawienia skill checka z GameManagera.
+    /// </summary>
+    public void SetSkillCheckSettings(bool enabled, float minDiff, float maxDiff, float chancePerMin, float goodBonus, float perfectBonus, float bonusDur, bool losesFish)
+    {
+        skillCheckEnabled = enabled;
+        skillCheckMinDifficulty = minDiff;
+        skillCheckMaxDifficulty = maxDiff;
+        szansaSkillCheckNaMinutę = chancePerMin;
+        goodSpeedBonus = goodBonus;
+        perfectSpeedBonus = perfectBonus;
+        bonusDuration = bonusDur;
+        failLosesFish = losesFish;
     }
 
     private void FindPlayer()
