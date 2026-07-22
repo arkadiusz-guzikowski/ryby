@@ -180,7 +180,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76d683e1f8948a347abfc464797a477d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bobber
-  castSpeed: 4
+  castSpeed: 6
   maxFlyScale: 2
   arcHeight: 6
   "d\u017Awi\u0119kPlusk": {fileID: 8300000, guid: 36c3aa457a29a8d449a69e802ae1575e, type: 3}

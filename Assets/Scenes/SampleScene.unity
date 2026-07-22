@@ -692,6 +692,11 @@ MonoBehaviour:
   moveSpeed: 5
   castKey: 31
   bobberPrefab: {fileID: 3333146869222893874, guid: 359805a9aacced3499c440511f66933c, type: 3}
+  "d\u017Awi\u0119kRzutu": {fileID: 8300000, guid: b72523033caeac14e92320f754f0df0f, type: 3}
+  audioSource: {fileID: 0}
+  minCastDistance: 3
+  maxCastDistance: 15
+  maxChargeTime: 5
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -774,7 +779,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0, g: 0.2528302, b: 0.03917591, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -999,6 +1004,112 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &930060763
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 930060765}
+  - component: {fileID: 930060764}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &930060764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930060763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 356b4b1fa03f7dc4cb00765b1586cc30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  predkoscRuchu: 5
+  klawiszRzutu: 31
+  "prefabSp\u0142awika": {fileID: 0}
+  "minOdleg\u0142o\u015B\u0107Rzutu": 2
+  "maxOdleg\u0142o\u015B\u0107Rzutu": 15
+  "czas\u0141adowania": 2
+  minCzasOczekiwania: 2
+  maxCzasOczekiwania: 5
+  awaryjnaMinWaga: 1
+  awaryjnaMaxWaga: 40
+  klawiszAkcji: 1
+  szansa1_5kg: 30
+  szansa5_10kg: 30
+  szansa10_20kg: 20
+  szansa20_30kg: 15
+  szansa30_40kg: 5
+  klawiszZwijania: 32
+  "bazowaPr\u0119dko\u015B\u0107Zwijania": 5
+  "pr\u0119dko\u015B\u0107ZwijaniaZRyba": 2
+  "krzywaPr\u0119dko\u015Bci":
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: -0.0225
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 40
+      value: 0.1
+      inSlope: -0.0225
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxWagaRyby: 40
+  "pr\u0119dko\u015B\u0107Ig\u0142y": 300
+  "szeroko\u015B\u0107DobrejStrefy": 0.25
+  "szeroko\u015B\u0107IdealnejStrefy": 0.2
+  limitCzasu: 3
+  klawiszSkillCheck: 1
+  "skillCheckW\u0142\u0105czony": 1
+  "minTrudno\u015B\u0107": 0.5
+  "maxTrudno\u015B\u0107": 2
+  "szansaSkillCheckNaMinut\u0119": 1015
+  bonusZaDobry: 1.3
+  bonusZaIdealny: 1.8
+  czasTrwaniaBonus: 1.5
+  "pora\u017CkaTraciRybe": 1
+  muzykaWTle: {fileID: 8300000, guid: 2a57d13553cf0b34e96cc4881597c313, type: 3}
+  "g\u0142o\u015Bno\u015B\u0107Muzyki": 0.09
+  klawiszPauzy: 60
+  startZPauza: 0
+  "szczeg\xF3\u0142oweLogi": 1
+--- !u!4 &930060765
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930060763}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.71112, y: -0.68752, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1419,6 +1530,64 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a204b5333a6f7d14d81d735dea37ac29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaterZoneChecker
+--- !u!1 &1756195281
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1756195283}
+  - component: {fileID: 1756195282}
+  m_Layer: 0
+  m_Name: SkillCheckManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1756195282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1756195281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f033722f75fc3b04a94ecb49848a5c10, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillCheckSystem
+  needleSpeed: 300
+  goodZoneWidth: 0.25
+  perfectZoneWidth: 0.2
+  timeLimit: 3
+  skillCheckKey: 1
+  "d\u017Awi\u0119kStart": {fileID: 8300000, guid: 97dd893d29a8ddd479c6b5cef97ecb3c, type: 3}
+  "d\u017Awi\u0119kDobry": {fileID: 8300000, guid: 008f2831c4b3f204285c54ab97c07350, type: 3}
+  "d\u017Awi\u0119kIdealny": {fileID: 8300000, guid: c2f676364d95a2242badd8cc12a0cfd2, type: 3}
+  "d\u017Awi\u0119kPud\u0142o": {fileID: 8300000, guid: 35361e84a93f5e94c934aa238dfa581d, type: 3}
+  barBgColor: {r: 0.1, g: 0.1, b: 0.1, a: 0.8}
+  goodZoneColor: {r: 0, g: 1, b: 0, a: 0.4}
+  perfectZoneColor: {r: 1, g: 1, b: 0, a: 0.6}
+  needleColor: {r: 1, g: 1, b: 1, a: 1}
+  borderColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+--- !u!4 &1756195283
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1756195281}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.71112, y: -0.68752, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1793625502
 GameObject:
   m_ObjectHideFlags: 0
@@ -1521,3 +1690,5 @@ SceneRoots:
   - {fileID: 541883103}
   - {fileID: 511984648}
   - {fileID: 1129137441}
+  - {fileID: 930060765}
+  - {fileID: 1756195283}
