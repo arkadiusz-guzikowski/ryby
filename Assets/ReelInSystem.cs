@@ -268,6 +268,22 @@ public class ReelInSystem : MonoBehaviour
             FishingSystem.Instance.OnFishLanded();
     }
 
+    // ============================================================
+    // ⚙️ USTAWIENIA Z GAMEMANAGERA
+    // ============================================================
+
+    /// <summary>
+    /// Synchronizuje ustawienia z GameManagera.
+    /// </summary>
+    public void SetSettings(Key reel, float baseSpeed, float speedWithFish, AnimationCurve speedCurve, float maxFishW)
+    {
+        reelKey = reel;
+        baseReelSpeed = baseSpeed;
+        reelSpeedWithFish = speedWithFish;
+        speedMultiplierCurve = speedCurve;
+        maxFishWeight = maxFishW;
+    }
+
     private void FindPlayer()
     {
         GameObject player = GameObject.FindGameObjectWithTag("Player");

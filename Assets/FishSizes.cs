@@ -46,6 +46,22 @@ public class FishSizes : MonoBehaviour
         }
     }
 
+    // ============================================================
+    // ⚙️ USTAWIENIA Z GAMEMANAGERA
+    // ============================================================
+
+    /// <summary>
+    /// Synchronizuje ustawienia z GameManagera.
+    /// </summary>
+    public void SetChances(float c1, float c2, float c3, float c4, float c5)
+    {
+        chance1_5kg = c1;
+        chance5_10kg = c2;
+        chance10_20kg = c3;
+        chance20_30kg = c4;
+        chance30_40kg = c5;
+    }
+
     public float GetRandomCarpWeight()
     {
         float c1, c2, c3, c4, c5;

@@ -228,4 +228,20 @@ public class FishingSystem : MonoBehaviour
         return Random.Range(fallbackMinWeight, fallbackMaxWeight);
     }
 
+    // ============================================================
+    // ⚙️ USTAWIENIA Z GAMEMANAGERA
+    // ============================================================
+
+    /// <summary>
+    /// Synchronizuje ustawienia z GameManagera.
+    /// </summary>
+    public void SetSettings(float minWait, float maxWait, float fallbackMin, float fallbackMax, Key action)
+    {
+        minWaitTime = minWait;
+        maxWaitTime = maxWait;
+        fallbackMinWeight = fallbackMin;
+        fallbackMaxWeight = fallbackMax;
+        actionKey = action;
+    }
+
 }

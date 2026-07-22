@@ -3,6 +3,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public static PlayerMovement Instance { get; private set; }
+
     [Header("Ruch")]
     [SerializeField] private float moveSpeed = 5f;
 
@@ -10,12 +12,25 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Key castKey = Key.Q;
     [SerializeField] private GameObject bobberPrefab;
 
+    [Header("Siła rzutu")]
+    [Tooltip("Minimalna odległość rzutu (przy szybkim kliknięciu).")]
+    [SerializeField] private float minCastDistance = 2f;
+    [Tooltip("Maksymalna odległość rzutu (przy pełnym naładowaniu).")]
+    [SerializeField] private float maxCastDistance = 15f;
+    [Tooltip("Czas ładowania pełnej siły (sekundy).")]
+    [SerializeField] private float maxChargeTime = 2f;
+
     private bool hasStarted = false;
     private GameObject currentBobber;
     private SpriteRenderer playerSprite;
 
+    // Stan ładowania rzutu
+    private bool isCharging = false;
+    private float chargeTimer = 0f;
+
     void Awake()
     {
+        Instance = this;
         playerSprite = GetComponent<SpriteRenderer>();
         if (playerSprite != null)
             playerSprite.enabled = false;
@@ -24,7 +39,7 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         Debug.Log("<color=#00FF00>══════════════════════════════════════════════════════════════════</color>");
-        Debug.Log("<color=#00FF00>  🎣 RYBY — Gra wędkarska  |  📍 Kliknij LPM, by ustawić pozycję  |  📖 Strzałki:ruch | LPM/Q:rzut | SPACJA: TNIJ!!! | R:zwijaj</color>");
+        Debug.Log("<color=#00FF00>  🎣 RYBY — Gra wędkarska  |  📍 Kliknij LPM, by ustawić pozycję  |  📖 Strzałki:ruch | Przytrzymaj LPM/Q:ładuj siłę i rzuć | SPACJA: TNIJ!!! | R:zwijaj</color>");
         Debug.Log("<color=#00FF00>══════════════════════════════════════════════════════════════════</color>");
     }
 
@@ -52,10 +67,46 @@ public class PlayerMovement : MonoBehaviour
 
         transform.Translate(movement.normalized * moveSpeed * Time.deltaTime);
 
-        // --- RZUT (LPM lub Q) ---
-        if (Mouse.current.leftButton.wasPressedThisFrame || Keyboard.current[castKey].wasPressedThisFrame)
+        // --- RZUT Z ŁADOWANIEM (LPM lub Q) ---
+        bool isCastKeyDown = Mouse.current.leftButton.isPressed || Keyboard.current[castKey].isPressed;
+        bool isCastKeyPressedThisFrame = Mouse.current.leftButton.wasPressedThisFrame || Keyboard.current[castKey].wasPressedThisFrame;
+        bool isCastKeyReleasedThisFrame = Mouse.current.leftButton.wasReleasedThisFrame || Keyboard.current[castKey].wasReleasedThisFrame;
+
+        if (isCastKeyPressedThisFrame && !isCharging && currentBobber == null)
         {
-            CastFishingRod();
+            // Rozpocznij ładowanie siły
+            isCharging = true;
+            chargeTimer = 0f;
+            Debug.Log("<color=#00BFFF>🎣 Ładowanie siły rzutu... (puść, by rzucić)</color>");
+        }
+
+        if (isCharging)
+        {
+            if (isCastKeyDown)
+            {
+                // Ładujemy siłę (im dłużej trzymamy, tym większa)
+                chargeTimer += Time.deltaTime;
+                if (chargeTimer > maxChargeTime)
+                    chargeTimer = maxChargeTime;
+
+                // Wizualne wskazanie siły — pasek postępu
+                float chargePercent = chargeTimer / maxChargeTime;
+                int progressBars = Mathf.FloorToInt(chargePercent * 10f);
+                string progressStr = new string('█', progressBars) + new string('░', 10 - progressBars);
+
+                if (chargePercent >= 1f)
+                {
+                    Debug.Log($"<color=#FF4500>⚡ Maksymalna siła! {progressStr} 100%</color>");
+                }
+            }
+
+            if (isCastKeyReleasedThisFrame)
+            {
+                // Puściliśmy klawisz — wykonaj rzut z naładowaną siłą
+                isCharging = false;
+                float chargePercent = Mathf.Clamp01(chargeTimer / maxChargeTime);
+                CastFishingRodWithPower(chargePercent);
+            }
         }
     }
 
@@ -77,11 +128,15 @@ public class PlayerMovement : MonoBehaviour
                 playerSprite.enabled = true;
 
             Debug.Log($"<color=#00FF00>📍 Gracz ustawiony na pozycji: {mouseWorldPos}</color>");
-            Debug.Log("<color=#00FF00>🎣 Kliknij LPM lub Q, żeby rzucić spławik!</color>");
+            Debug.Log("<color=#00FF00>🎣 Przytrzymaj LPM lub Q, żeby naładować siłę i rzucić spławik!</color>");
         }
     }
 
-    private void CastFishingRod()
+    /// <summary>
+    /// Rzuca spławik w kierunku myszki z siłą zależną od czasu przytrzymania.
+    /// </summary>
+    /// <param name="powerPercent">0 = minimalna siła, 1 = maksymalna</param>
+    private void CastFishingRodWithPower(float powerPercent)
     {
         // Blokada: jeśli spławik już istnieje (w wodzie lub leci), nie można rzucić ponownie
         if (currentBobber != null)
@@ -98,16 +153,26 @@ public class PlayerMovement : MonoBehaviour
         );
         mouseWorldPos.z = 0f;
 
+        // Oblicz kierunek od gracza do myszki
+        Vector3 direction = (mouseWorldPos - transform.position).normalized;
+        if (direction.magnitude < 0.01f)
+            direction = Vector3.right; // awaryjnie, jeśli myszka na graczu
+
+        // Oblicz odległość rzutu na podstawie naładowanej siły
+        float castDistance = Mathf.Lerp(minCastDistance, maxCastDistance, powerPercent);
+
+        // Oblicz docelową pozycję
+        Vector3 targetPosition = transform.position + direction * castDistance;
+
         // Sprawdź czy cel jest w water zone
         WaterZoneChecker waterZone = FindAnyObjectByType<WaterZoneChecker>();
-        if (waterZone == null || !waterZone.IsPointInWater(mouseWorldPos))
+        if (waterZone == null || !waterZone.IsPointInWater(targetPosition))
         {
-            Debug.Log("<color=#FFA500>⛔ Rzut poza wodę! Powtórz rzut w obrębie jeziora.</color>");
+            Debug.Log($"<color=#FFA500>⛔ Cel poza wodą! Rzut anulowany. (siła: {powerPercent * 100f:F0}%)</color>");
             return;
         }
 
-        float distance = Vector3.Distance(transform.position, mouseWorldPos);
-        Debug.Log($"<color=#00BFFF>🎣 Rzut! Odległość: <b>{distance:F1}m</b></color>");
+        Debug.Log($"<color=#00BFFF>🎣 Rzut! Siła: <b>{powerPercent * 100f:F0}%</b>, Odległość: <b>{castDistance:F1}m</b>, Kierunek: {direction}</color>");
 
         // Spawn spławika
         if (bobberPrefab != null)
@@ -117,8 +182,8 @@ public class PlayerMovement : MonoBehaviour
             Bobber bobber = currentBobber.GetComponent<Bobber>();
             if (bobber != null)
             {
-                bobber.CastTo(mouseWorldPos);
-                Debug.Log($"<color=#00BFFF>📌 Spławik leci do: {mouseWorldPos}</color>");
+                bobber.CastTo(targetPosition);
+                Debug.Log($"<color=#00BFFF>📌 Spławik leci do: {targetPosition}</color>");
             }
             else
             {
@@ -142,5 +207,22 @@ public class PlayerMovement : MonoBehaviour
     public void ClearBobberReference()
     {
         currentBobber = null;
+    }
+
+    // ============================================================
+    // ⚙️ USTAWIENIA Z GAMEMANAGERA
+    // ============================================================
+
+    /// <summary>
+    /// Synchronizuje ustawienia z GameManagera.
+    /// </summary>
+    public void SetSettings(float speed, Key cast, GameObject bobber, float minDist, float maxDist, float chargeTime)
+    {
+        moveSpeed = speed;
+        castKey = cast;
+        if (bobber != null) bobberPrefab = bobber;
+        minCastDistance = minDist;
+        maxCastDistance = maxDist;
+        maxChargeTime = chargeTime;
     }
 }
